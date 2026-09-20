@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Отчёт дня</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    background: #f0f2f5;
+    color: #111;
+    padding-bottom: 110px;
+  }
+
+  header {
+    background: #2c3e50;
+    color: #fff;
+    padding: 12px 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  header .date {
+    font-size: 12px;
+    font-weight: 400;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+
+  .section {
+    background: #fff;
+    margin: 8px 6px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #fff;
+    padding: 9px 12px;
+    font-weight: 600;
+    background: #7f8c8d;
+  }
+  .section-title.sec-meet   { background: #2c3e50; }
+  .section-title.sec-sim    { background: #2980b9; }
+  .section-title.sec-biz    { background: #8e44ad; }
+  .section-title.sec-cards  { background: #16a085; }
+  .section-title.sec-other  { background: #7f8c8d; }
+  .section-title.sec-prime  { background: #d35400; }
+  .section-title.sec-health { background: #c0392b; }
+  .section-title.sec-apps   { background: #34495e; }
+  .section-title.sec-extra  { background: #b8860b; }
+  .section-title.sec-b2c    { background: #1a5276; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    padding: 7px 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .row:last-child { border-bottom: none; }
+  .row .name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.25;
+    padding-right: 6px;
+  }
+  .row .coef {
+    font-size: 11px;
+    color: #888;
+    margin-left: 4px;
+    font-weight: 400;
+  }
+
+  .counter {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .counter button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: #e8eef5;
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    user-select: none;
+    transition: background 0.1s;
+    flex-shrink: 0;
+  }
+  .counter button:active { background: #c9d8ea; }
+  .counter .value {
+    min-width: 26px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c3e50;
+  }
+  .counter .value.zero { color: #bbb; }
+
+  .extra-item {
+    padding: 9px 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .extra-item:last-child { border-bottom: none; }
+  .extra-item .extra-name {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .extra-item .extra-name input {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-weight: 400;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+  .extra-item .extra-name input:focus { background: #fff; border-color: #3498db; outline: none; }
+  .extra-item .extra-del {
+    background: #fdecec;
+    color: #c0392b;
+    border: none;
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-left: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .extra-item .extra-del:active { background: #f5c6c6; }
+  .extra-item .extra-fields {
+    display: flex;
+    gap: 6px;
+  }
+  .extra-item .extra-fields label {
+    flex: 1;
+    font-size: 11px;
+    color: #666;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .extra-item .extra-fields input {
+    padding: 8px 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+    background: #fafafa;
+    width: 100%;
+  }
+  .extra-item .extra-fields input:focus { background: #fff; border-color: #3498db; outline: none; }
+  .extra-add {
+    display: block;
+    width: calc(100% - 20px);
+    margin: 9px 10px;
+    padding: 12px;
+    background: #f5e9c9;
+    color: #7a5c00;
+    border: 1px dashed #b8860b;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .extra-add:active { background: #ebd9a7; }
+
+  .manual {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .manual:last-child { border-bottom: none; }
+  .manual .name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 400;
+  }
+  .manual input {
+    width: 120px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+    -webkit-appearance: none;
+  }
+
+  .totals {
+    position: fixed;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    background: #2c3e50;
+    color: #fff;
+    padding: 9px 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 56px;
+    z-index: 30;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+  }
+  .totals .item {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
+  }
+  .totals .item .label {
+    font-size: 9px;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .totals .item .num {
+    font-size: 17px;
+    font-weight: 700;
+    margin-top: 1px;
+    white-space: nowrap;
+  }
+
+  .actions {
+    margin: 8px 6px 40px;
+    padding: 0;
+    display: flex;
+    gap: 6px;
+  }
+  .actions button {
+    flex: 1;
+    padding: 14px 8px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+  }
+  .btn-primary { background: #27ae60; color: #fff; }
+  .btn-primary:active { background: #1f8b4d; }
+  .btn-primary:disabled { background: #c5c9cc; color: #f0f0f0; cursor: not-allowed; }
+  .btn-secondary { background: #ecf0f1; color: #2c3e50; flex: 0 0 100px !important; }
+  .btn-secondary:active { background: #d5dbdd; }
+
+  .output {
+    margin: 8px 6px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    white-space: pre-wrap;
+    font-size: 12px;
+    line-height: 1.5;
+    display: none;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    border: 1px solid #ddd;
+  }
+  .output.show { display: block; }
+
+  .toast {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2c3e50;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Отчёт дня</h1>
+  <div class="date" id="todayDate"></div>
+</header>
+
+<div id="app"></div>
+
+<div class="actions">
+  <button class="btn-secondary" id="btnReset">Сброс</button>
+  <button class="btn-primary" id="btnReport" disabled>Отчёт</button>
+</div>
+
+<div class="totals">
+  <div class="item">
+    <div class="label">УП</div>
+    <div class="num" id="totalUP">0.00</div>
+  </div>
+  <div class="item">
+    <div class="label">ОД</div>
+    <div class="num" id="totalOD">0</div>
+  </div>
+  <div class="item">
+    <div class="label">УП/ФД</div>
+    <div class="num" id="totalUPFD">0.00</div>
+  </div>
+  <div class="item">
+    <div class="label">B2C</div>
+    <div class="num" id="totalB2C">0/0</div>
+  </div>
+  <div class="item">
+    <div class="label">B2B</div>
+    <div class="num" id="totalB2B">0/0</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SECTIONS = [
+  {
+    title: 'Встречи',
+    color: 'sec-meet',
+    items: [
+      { id: 'fd_meet_02',  name: 'Встреча ФД обычная',                up: 0.20, od: 0,    type: 'meeting' },
+      { id: 'fd_meet_035', name: 'Встреча ФД детская с верификацией', up: 0.35, od: 0,    type: 'meeting' },
+      { id: 'fd_meet_dbo', name: 'Встреча ФД ДБО',                    up: 0.35, od: 0,    type: 'meeting' },
+    ]
+  },
+  {
+    title: 'СИМ',
+    color: 'sec-sim',
+    items: [
+      { id: 'sim_my',     name: 'Сим по промокоду для своих', up: 0.10, od: 165, group: 'Сим' },
+      { id: 'sim_100',    name: 'Сим по промокоду КАРТА 100', up: 0.05, od: 50,  group: 'Сим' },
+      { id: 'sim_pay',    name: 'Сим оплата (активация)',     up: 0.25, od: 416, group: 'Сим' },
+      { id: 'sim_topup',  name: 'Пополнение СИМ',             up: 0.25, od: 500, group: 'Сим' },
+      { id: 'perenos',    name: 'Перенос номера',             up: 0.30, od: 220, group: 'Сим' },
+    ]
+  },
+  {
+    title: 'Бизнес',
+    color: 'sec-biz',
+    items: [
+      { id: 'biz_rko',   name: 'РКО',              up: 0.48, od: 0,    type: 'biz' },
+      { id: 'biz_ip',    name: 'Идентификация ИП', up: 0.25, od: 0,    type: 'biz' },
+      { id: 'biz_card',  name: 'Бизнес карта',     up: 0.20, od: 0,    type: 'biz' },
+    ]
+  },
+  {
+    title: 'Карты и кредиты',
+    color: 'sec-cards',
+    items: [
+      { id: 'kk',  name: 'КК (кредитная карта)', up: 0.56, od: 3007, group: 'КК' },
+      { id: 'pk',  name: 'ПК',                   up: 0.95, od: 7023, group: 'ПК' },
+    ]
+  },
+  {
+    title: 'Прочее',
+    color: 'sec-other',
+    items: [
+      { id: 'zk',         name: 'ЗК (зарплатная карта)',            up: 0.10, od: 0,    group: 'ЗК' },
+      { id: 'vklad',      name: 'Вклад / накоп. счёт',              up: 0.35, od: 702 },
+      { id: 'app_upd',    name: 'Обновление МП',                    up: 0.06, od: 350 },
+      { id: 'app_inst',   name: 'Установка МП',                     up: 0.06, od: 637 },
+      { id: 'notif',      name: 'Уведомления',                      up: 0.02, od: 407 },
+      { id: 'sberkids',   name: 'Установка СберКидс',               up: 0.07, od: 637 },
+      { id: 'zls_tick',   name: 'ЗЛС Клещ',                         up: 0.20, od: 225 },
+      { id: 'kids_card',  name: 'Детская карта моментальная',       up: 0.11, od: 829 },
+      { id: 'kids_order', name: 'Заказ детской карты',              up: 0.10, od: 504 },
+      { id: 'ops',        name: 'ОПС',                              up: 0.30, od: 0 },
+      { id: 'ops_pds',    name: 'ОПС в ПДС перевод',                up: 0.30, od: 926, group: 'ПДС' },
+      { id: 'pds',        name: 'ПДС',                              up: 1.00, od: 645, group: 'ПДС' },
+      { id: 'zls_1000',   name: 'ЗЛС от 1000 рублей',               up: 0.24, od: 3682 },
+    ]
+  },
+  {
+    title: 'Прайм',
+    color: 'sec-prime',
+    items: [
+      { id: 'prime_y',   name: 'Прайм год/месяц',      up: 0.20, od: 625,  group: 'Прайм' },
+      { id: 'prime_m',   name: 'Ежемесячный прайм +',  up: 0.35, od: 1060, group: 'Прайм' },
+      { id: 'prime_1',   name: 'Сберпрайм за 1 рубль', up: 0.10, od: 147,  group: 'Прайм' },
+    ]
+  },
+  {
+    title: 'Здоровье',
+    color: 'sec-health',
+    items: [
+      { id: 'sz', name: 'Сберздоровье (СЗ)', up: 0.60, od: 2650, group: 'СЗ' },
+    ]
+  }
+];
+
+const APPS = [
+  { id: 'kk_requests',  name: 'КК заявки',            mode: 'numeric' },
+  { id: 'kk_approved',  name: 'КК одобрено',          mode: 'numeric' },
+];
+
+const B2C = [
+  { id: 'b2c_total',    name: 'B2C назначено встреч', mode: 'numeric' },
+  { id: 'b2b_total',    name: 'B2B назначено встреч', mode: 'numeric' },
+  { id: 'reasons',      name: 'Причины не доставок',  mode: 'text' },
+];
+
+const STORAGE_KEY = 'report_day_v1';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      s.counts = s.counts || {};
+      s.manual = s.manual || {};
+      s.extra = s.extra || [];
+      return s;
+    }
+  } catch (e) {}
+  return { counts: {}, manual: {}, extra: [] };
+}
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+let state = loadState();
+
+function getCount(id) { return state.counts[id] || 0; }
+function setCount(id, v) {
+  v = Math.max(0, v | 0);
+  if (v === 0) delete state.counts[id];
+  else state.counts[id] = v;
+  saveState(state);
+  renderTotals();
+  updateRow(id, v);
+}
+function getManual(id) { return state.manual[id] || ''; }
+function setManual(id, v) {
+  state.manual[id] = v;
+  saveState(state);
+  renderTotals();
+}
+function num(v) { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; }
+
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  SECTIONS.forEach(section => {
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.innerHTML = `<div class="section-title ${section.color || ''}">${section.title}</div>`;
+    section.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.dataset.id = item.id;
+      row.innerHTML = `
+        <div class="name">${item.name}<span class="coef">${item.up}</span></div>
+        <div class="counter">
+          <button data-act="minus">−</button>
+          <div class="value ${getCount(item.id) === 0 ? 'zero' : ''}">${getCount(item.id)}</div>
+          <button data-act="plus">+</button>
+        </div>`;
+      sec.appendChild(row);
+    });
+    app.appendChild(sec);
+  });
+
+  const appsSec = document.createElement('div');
+  appsSec.className = 'section';
+  appsSec.innerHTML = `<div class="section-title sec-apps">Заявки</div>`;
+  APPS.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'manual';
+    row.innerHTML = `
+      <div class="name">${m.name}</div>
+      <input type="text" inputmode="${m.mode || 'numeric'}" data-manual="${m.id}" value="${getManual(m.id)}">`;
+    appsSec.appendChild(row);
+  });
+  app.appendChild(appsSec);
+
+  const extraSec = document.createElement('div');
+  extraSec.className = 'section';
+  extraSec.innerHTML = `<div class="section-title sec-extra">Доп. продукты</div>`;
+
+  if (!state.extra) state.extra = [];
+
+  state.extra.forEach((item, idx) => {
+    const block = document.createElement('div');
+    block.className = 'extra-item';
+    block.innerHTML = `
+      <div class="extra-name">
+        <input type="text" placeholder="Название продукта" data-extra-name="${idx}" value="${item.name || ''}">
+        <button class="extra-del" data-extra-del="${idx}">✕</button>
+      </div>
+      <div class="extra-fields">
+        <label>УП
+          <input type="text" inputmode="decimal" data-extra-up="${idx}" value="${item.up || ''}">
+        </label>
+        <label>ОД
+          <input type="text" inputmode="decimal" data-extra-od="${idx}" value="${item.od || ''}">
+        </label>
+      </div>`;
+    extraSec.appendChild(block);
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'extra-add';
+  addBtn.textContent = '+ Добавить продукт';
+  addBtn.addEventListener('click', () => {
+    state.extra.push({ name: '', up: '', od: '' });
+    saveState(state);
+    render();
+    renderTotals();
+  });
+  extraSec.appendChild(addBtn);
+  app.appendChild(extraSec);
+
+  const b2cSec = document.createElement('div');
+  b2cSec.className = 'section';
+  b2cSec.innerHTML = `<div class="section-title sec-b2c">Встречи</div>`;
+  B2C.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'manual';
+    row.innerHTML = `
+      <div class="name">${m.name}</div>
+      <input type="text" inputmode="${m.mode || 'numeric'}" data-manual="${m.id}" value="${getManual(m.id)}">`;
+    b2cSec.appendChild(row);
+  });
+  app.appendChild(b2cSec);
+}
+
+function updateRow(id, val) {
+  const row = document.querySelector(`.row[data-id="${id}"]`);
+  if (!row) return;
+  const v = row.querySelector('.value');
+  v.textContent = val;
+  v.classList.toggle('zero', val === 0);
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-act]');
+  if (btn) {
+    const row = btn.closest('.row');
+    const id = row.dataset.id;
+    const act = btn.dataset.act;
+    const cur = getCount(id);
+    setCount(id, act === 'plus' ? cur + 1 : cur - 1);
+    return;
+  }
+  const del = e.target.closest('button[data-extra-del]');
+  if (del) {
+    const idx = Number(del.dataset.extraDel);
+    state.extra.splice(idx, 1);
+    saveState(state);
+    render();
+    renderTotals();
+  }
+});
+
+document.addEventListener('input', (e) => {
+  const inp = e.target.closest('input[data-manual]');
+  if (inp) {
+    setManual(inp.dataset.manual, inp.value);
+    return;
+  }
+  const en = e.target.closest('input[data-extra-name]');
+  if (en) {
+    state.extra[Number(en.dataset.extraName)].name = en.value;
+    saveState(state);
+    renderTotals();
+    return;
+  }
+  const eu = e.target.closest('input[data-extra-up]');
+  if (eu) {
+    state.extra[Number(eu.dataset.extraUp)].up = eu.value;
+    saveState(state);
+    renderTotals();
+    return;
+  }
+  const eo = e.target.closest('input[data-extra-od]');
+  if (eo) {
+    state.extra[Number(eo.dataset.extraOd)].od = eo.value;
+    saveState(state);
+    renderTotals();
+  }
+});
+
+function calcTotals() {
+  let up = 0, od = 0, upFD = 0;
+  let meetings = 0;
+  let bizMeetings = 0;
+  SECTIONS.forEach(s => s.items.forEach(i => {
+    const c = getCount(i.id);
+    up += c * i.up;
+    od += c * i.od;
+    if (i.type === 'meeting') {
+      meetings += c;
+    } else if (i.type === 'biz') {
+      bizMeetings += c;
+    } else {
+      upFD += c * i.up;
+    }
+  }));
+  (state.extra || []).forEach(x => {
+    up += num(x.up);
+    od += num(x.od);
+  });
+  const b2cTotal = Number(getManual('b2c_total')) || 0;
+  const b2bTotal = Number(getManual('b2b_total')) || 0;
+  return { up, od, upFD, meetings, bizMeetings, b2cTotal, b2bTotal };
+}
+
+function renderTotals() {
+  const t = calcTotals();
+  document.getElementById('totalUP').textContent = t.up.toFixed(2);
+  document.getElementById('totalOD').textContent = t.od;
+  document.getElementById('totalUPFD').textContent = t.upFD.toFixed(2);
+  document.getElementById('totalB2C').textContent = `${t.b2cTotal}/${t.meetings}`;
+  document.getElementById('totalB2B').textContent = `${t.b2bTotal}/${t.bizMeetings}`;
+
+  const btn = document.getElementById('btnReport');
+  const b2cRaw = getManual('b2c_total').trim();
+  btn.disabled = b2cRaw === '';
+}
+
+function buildReportText() {
+  let up = 0, od = 0, upFD = 0;
+  let fd02 = 0, fd035 = 0;
+  let sumSim = 0, sumPrime = 0, sumPDS = 0;
+  let cntZK = 0, cntKK = 0, cntPK = 0, cntSZ = 0;
+  let bizMeetings = 0;
+  const others = [];
+
+  SECTIONS.forEach(s => s.items.forEach(i => {
+    const c = getCount(i.id);
+    if (!c) return;
+    up += c * i.up;
+    od += c * i.od;
+    if (i.type === 'meeting') {
+      if (i.id === 'fd_meet_02') fd02 += c;
+      else fd035 += c;
+      return;
+    }
+    if (i.type === 'biz') {
+      bizMeetings += c;
+    }
+    upFD += c * i.up;
+    if (i.group === 'Сим')   sumSim   += c;
+    if (i.group === 'Прайм') sumPrime += c;
+    if (i.group === 'ПДС')   sumPDS   += c;
+    if (i.group === 'ЗК')    cntZK    += c;
+    if (i.group === 'КК')    cntKK    += c;
+    if (i.group === 'ПК')    cntPK    += c;
+    if (i.group === 'СЗ')    cntSZ    += c;
+    others.push(`${c} ${i.name}`);
+  }));
+
+  (state.extra || []).forEach(x => {
+    if (x.name && x.name.trim()) {
+      others.push(x.name.trim());
+    }
+  });
+
+  const m = (id) => getManual(id);
+  const totalMeetings = fd02 + fd035;
+  const b2cTotal = Number(m('b2c_total')) || 0;
+  const b2bTotal = Number(m('b2b_total')) || 0;
+  const b2cLine = `${b2cTotal}/${totalMeetings}`;
+  const b2bLine = `${b2bTotal}/${bizMeetings}`;
+
+  return `‼️‼️‼️
+Новый формат ✅
+
+УП: ${up.toFixed(2)}
+
+ЗК: ${cntZK || ''}
+КК: ${cntKK || ''}
+ПК: ${cntPK || ''}
+Сим: ${sumSim || ''}
+Прайм: ${sumPrime || ''}
+СЗ: ${cntSZ || ''}
+ПДС: ${sumPDS || ''}
+КС: 
+Другие продукты: ${others.join(', ')}
+
+КК заявки: ${m('kk_requests')}
+КК одобрено: ${m('kk_approved')}
+
+B2B tr ЕКП: ${b2bLine}
+B2C tr ЕКП: ${b2cLine}
+B2C слот ЕКП: ${b2cLine}
+
+ФД 0.35: ${fd035}
+ФД 0.2: ${fd02}
+ЗК с ОД: 
+
+ОД: ${od}
+УП на ФД: ${upFD.toFixed(2)}
+
+Причины не доставок: ${m('reasons')}`;
+}
+
+function showToast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('✅ Скопировано');
+    return true;
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showToast('✅ Скопировано');
+      document.body.removeChild(ta);
+      return true;
+    } catch (e2) {
+      document.body.removeChild(ta);
+      showToast('❌ Не удалось скопировать');
+      return false;
+    }
+  }
+}
+
+document.getElementById('btnReport').addEventListener('click', async () => {
+  const text = buildReportText();
+  await copyText(text);
+  if (navigator.share) {
+    try {
+      await navigator.share({ text: text });
+    } catch (e) {}
+  }
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (!confirm('Сбросить все данные за день?')) return;
+  state = { counts: {}, manual: {}, extra: [] };
+  saveState(state);
+  render();
+  renderTotals();
+  showToast('🔄 Сброшено');
+});
+
+document.getElementById('todayDate').textContent =
+  new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+
+render();
+renderTotals();
+</script>
+</body>
+</html>
